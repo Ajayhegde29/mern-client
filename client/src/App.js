@@ -1,9 +1,11 @@
+// ✅ FILE: client/src/App.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import axios from 'axios';
 
-// API base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+// ✅ Updated API base URL to point to your Render backend
+const API_BASE_URL = 'https://to-do-app-8je5.onrender.com/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,24 +14,18 @@ function App() {
   const [newTodo, setNewTodo] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Auth states
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
-  const [authData, setAuthData] = useState({
-    email: '',
-    password: ''
-  });
 
-  // Refs for focus management
+  const [authMode, setAuthMode] = useState('login');
+  const [authData, setAuthData] = useState({ email: '', password: '' });
+
   const todoInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
 
-  // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       setIsAuthenticated(true);
       setUser(JSON.parse(userData));
@@ -38,14 +34,12 @@ function App() {
     }
   }, []);
 
-  // Focus management for todo input
   useEffect(() => {
     if (isAuthenticated && todoInputRef.current) {
       todoInputRef.current.focus();
     }
   }, [isAuthenticated]);
 
-  // Authentication functions
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -54,7 +48,7 @@ function App() {
     try {
       const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, authData);
-      
+
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -79,7 +73,6 @@ function App() {
     delete axios.defaults.headers.common['Authorization'];
   };
 
-  // Todo functions
   const fetchTodos = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/todos`);
@@ -97,10 +90,7 @@ function App() {
       const response = await axios.post(`${API_BASE_URL}/todos`, { text: newTodo });
       setTodos([...todos, response.data]);
       setNewTodo('');
-      // Refocus the input after adding todo
-      if (todoInputRef.current) {
-        todoInputRef.current.focus();
-      }
+      if (todoInputRef.current) todoInputRef.current.focus();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to add todo');
     }
@@ -127,7 +117,6 @@ function App() {
     }
   };
 
-  // Input change handlers with debouncing
   const handleTodoInputChange = (e) => {
     setNewTodo(e.target.value);
   };
@@ -136,7 +125,6 @@ function App() {
     setAuthData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Auth Form Component
   const AuthForm = () => (
     <div className="auth-container">
       <div className="auth-card">
@@ -144,9 +132,9 @@ function App() {
         <p className="auth-subtitle">
           {authMode === 'login' ? 'Sign in to manage your todos' : 'Join us to start organizing your tasks'}
         </p>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleAuth} className="auth-form">
           <div className="form-group">
             <input
@@ -172,11 +160,11 @@ function App() {
             {loading ? 'Loading...' : (authMode === 'login' ? 'Sign In' : 'Sign Up')}
           </button>
         </form>
-        
+
         <div className="auth-switch">
           <p>
             {authMode === 'login' ? "Don't have an account? " : "Already have an account? "}
-            <button 
+            <button
               onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
               className="switch-button"
             >
@@ -188,7 +176,6 @@ function App() {
     </div>
   );
 
-  // Todo App Component
   const TodoApp = () => (
     <div className="todo-container">
       <header className="todo-header">
@@ -196,9 +183,7 @@ function App() {
           <h1>✨ My Todo App</h1>
           <div className="user-info">
             <span>Welcome, {user?.email}</span>
-            <button onClick={handleLogout} className="logout-button">
-              Logout
-            </button>
+            <button onClick={handleLogout} className="logout-button">Logout</button>
           </div>
         </div>
       </header>
@@ -215,9 +200,7 @@ function App() {
               className="todo-input"
               autoFocus
             />
-            <button type="submit" className="add-button">
-              Add
-            </button>
+            <button type="submit" className="add-button">Add</button>
           </form>
 
           {error && <div className="error-message">{error}</div>}
@@ -239,12 +222,7 @@ function App() {
                     />
                     <span className="todo-text">{todo.text}</span>
                   </div>
-                  <button
-                    onClick={() => deleteTodo(todo._id)}
-                    className="delete-button"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => deleteTodo(todo._id)} className="delete-button">×</button>
                 </div>
               ))
             )}
