@@ -1,14 +1,26 @@
 {
   "name": "mern-todo-app",
   "version": "1.0.0",
-  "description": "MERN Stack Todo Application",
-  "private": true,
+  "description": "A beautiful MERN stack Todo application",
+  "main": "index.js",
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "start": "cd client && npm start",
-    "dev": "cd client && npm start"
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm start",
+    "client": "cd client && npm start",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
-  "keywords": ["mern", "todo", "react", "node", "mongodb"],
+  "keywords": [
+    "mern",
+    "todo",
+    "react",
+    "express",
+    "mongodb",
+    "nodejs"
+  ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 } 

@@ -1,135 +1,110 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-// Import Routes
 const authRoutes = require('./routes/auth');
 const todoRoutes = require('./routes/todos');
 
 const app = express();
 
-// ======= MIDDLEWARE =======
+// ========== MIDDLEWARE ==========
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
+  credentials: true,
 }));
-app.use(express.json({ limit: '10mb' })); // Parse JSON body with size limit
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ======= REQUEST LOGGING MIDDLEWARE =======
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// ======= ROOT ROUTE =======
+// ========== ROUTES ==========
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'MERN Todo App Backend API',
-    status: 'Server is running ✅',
-    timestamp: new Date().toISOString(),
+  res.json({
+    message: '📝 MERN To-Do App API',
     version: '1.0.0',
+    status: '✅ Running',
     endpoints: {
-      api: '/api',
       auth: '/api/auth',
-      todos: '/api/todos'
-    }
+      todos: '/api/todos',
+    },
   });
 });
 
-// ======= TEST ROUTE =======
-app.get('/api', (req, res) => {
-  res.json({ 
-    message: 'API is running ✅',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// ======= MOUNT ROUTES =======
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
-// ======= 404 HANDLER =======
+// ========== 404 ==========
 app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: '❌ Route not found' });
 });
 
-// ======= ERROR HANDLING MIDDLEWARE =======
+// ========== GLOBAL ERROR HANDLER ==========
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err);
-  
+
   if (err.name === 'ValidationError') {
-    return res.status(400).json({ 
-      message: 'Validation error', 
-      error: Object.values(err.errors).map(error => error.message) 
-    });
+    return res.status(400).json({ message: 'Validation error', errors: err.errors });
   }
-  
+
   if (err.name === 'CastError') {
     return res.status(400).json({ message: 'Invalid ID format' });
   }
-  
+
   if (err.code === 11000) {
-    return res.status(400).json({ message: 'Duplicate field value' });
+    return res.status(400).json({ message: 'Duplicate key error', fields: err.keyValue });
   }
-  
-  res.status(500).json({ 
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
+
+  res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 
-// ======= DATABASE CONNECTION =======
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-.then(() => {
-  console.log('✅ MongoDB connected successfully');
-  console.log(`📊 Database: ${mongoose.connection.name}`);
-})
-.catch((err) => {
-  console.error('❌ MongoDB connection error:', err.message);
-  process.exit(1); // Stop the server if DB fails
-});
-
-// ======= GRACEFUL SHUTDOWN =======
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Received SIGINT. Closing server gracefully...');
-  try {
-    await mongoose.connection.close();
-    console.log('✅ Database connection closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ Error during shutdown:', err);
-    process.exit(1);
-  }
-});
-
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 Received SIGTERM. Closing server gracefully...');
-  try {
-    await mongoose.connection.close();
-    console.log('✅ Database connection closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ Error during shutdown:', err);
-    process.exit(1);
-  }
-});
-
-// ======= START SERVER =======
+// ========== DATABASE CONNECTION ==========
 const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.warn('⚠️ No MONGO_URI provided. Using in-memory development mode.');
+} else {
+  mongoose.connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+  })
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err.message);
+  });
+}
+
+// ========== START SERVER ==========
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📡 API URL: http://localhost:${PORT}/api`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-// Handle server errors
+// ========== GRACEFUL SHUTDOWN ==========
+const shutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}. Shutting down...`);
+  try {
+    await mongoose.connection.close();
+    console.log('✅ MongoDB connection closed.');
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ Shutdown error:', err);
+    process.exit(1);
+  }
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+// ========== HANDLE PORT ERRORS ==========
 server.on('error', (err) => {
-  console.error('❌ Server error:', err);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use`);
+  } else {
+    console.error('❌ Server startup error:', err);
+  }
   process.exit(1);
 });
