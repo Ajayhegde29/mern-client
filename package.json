@@ -1,0 +1,14 @@
+{
+  "name": "mern-todo-app",
+  "version": "1.0.0",
+  "description": "MERN Stack Todo Application",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "cd client && npm start",
+    "dev": "cd client && npm start"
+  },
+  "keywords": ["mern", "todo", "react", "node", "mongodb"],
+  "author": "Your Name",
+  "license": "MIT"
+} 
