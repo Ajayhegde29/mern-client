@@ -13,19 +13,22 @@ const app = express();
 // ========== MIDDLEWARE ==========
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://mern-client-yj3h-git-master-ajayhegde29s-projects.vercel.app',
+  'https://mern-client-yj3h-git-master-ajayhegde29s-projects.vercel.app/'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow no origin (like mobile apps or curl), or if origin is in allowedOrigins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('❌ CORS blocked:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true
 }));
+
 
 
 app.use(express.json({ limit: '10mb' }));
