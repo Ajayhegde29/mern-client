@@ -12,9 +12,10 @@ const app = express();
 
 // ========== MIDDLEWARE ==========
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
+  origin:'mern-client-r521-git-master-ajayhegde29s-projects.vercel.app', 
+  credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
