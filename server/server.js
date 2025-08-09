@@ -11,25 +11,13 @@ const todoRoutes = require('./routes/todos');
 const app = express();
 
 // ========== MIDDLEWARE ==========
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://mern-client-yj3h-git-master-ajayhegde29s-projects.vercel.app/'
-];
-
+// More permissive CORS configuration for development
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow no origin (like mobile apps or curl), or if origin is in allowedOrigins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: true, // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
 }));
-
-
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
